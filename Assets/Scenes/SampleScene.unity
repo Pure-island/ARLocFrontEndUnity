@@ -370,7 +370,7 @@ MonoBehaviour:
   lockUpdateScale: 1
   usePreComputeScale: 1
   preComputeScale: 1
-  scaleChangeFactor: 0.3
+  scaleChangeFactor: 0.5295
   minSceneDistanceToUpdateScale: 0.1
   poseUpdatePerFrame: 0
   poseChangeFactor: 0.5

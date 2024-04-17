@@ -1,4 +1,5 @@
 using DG.Tweening;
+using Google.XR.ARCoreExtensions;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -222,15 +223,16 @@ public class ARSceneTransformer : MonoBehaviour
                     returnMsg += "predictScale " + predictScale.ToString();
 
                     // 返回current_camera
-                    Pose ServerPose = pose;
                     //transServerPose = ARTools.getInversePose(transServerPose, true);
                     //transServerPose = transformPose(ref transformMatrix, transServerPose);  //变换后端位姿
 
 
                     returnMsg += ";";
-                    Pose CameraPose = new Pose(Camera.main.transform.position, Camera.main.transform.rotation);
-                    returnMsg += "ARCameraPose " + ARTools.pose2Str(ref CameraPose);
+                    Pose frontPoseInversed = ARTools.getInversePose(frontPose, true);
+                    returnMsg += "ARCameraPose " + ARTools.pose2Str(ref frontPoseInversed);
                     returnMsg += ";";
+                    Pose ServerPose = ARTools.getInversePose(pose, true);
+                    ServerPose = transformPose(ref transformMatrix, ServerPose);
                     returnMsg += "ServerPose " + ARTools.pose2Str(ref ServerPose);
                 }
 
@@ -403,6 +405,7 @@ public class ARSceneTransformer : MonoBehaviour
 
         if (firstLocalize)
         {
+            //StartCoroutine(ReLocateCameraPos(worldCameraPos));
             firstLocalize = false;
             firstScenePos = sceneCameraPos;
             firstWorldPos = worldCameraPos;
@@ -414,6 +417,23 @@ public class ARSceneTransformer : MonoBehaviour
 
         transformMatrix = Tw2c * Tscale21 * Tcw1;   //Tw2w1，场景坐标到世界坐标
 
+    }
+
+    private IEnumerator ReLocateCameraPos(Vector3 worldCameraPos)
+    {
+        ARSession session = GameObject.FindObjectOfType<ARSession>();
+        session.enabled = false;
+        Camera camera = Camera.main;
+        camera.GetComponent<ARPoseDriver>().enabled = false;
+        camera.GetComponent<ARCameraManager>().enabled = false;
+        yield return new WaitForSeconds(0.1f);
+        Camera.main.transform.localPosition = worldCameraPos;
+        yield return new WaitForSeconds(0.1f);
+        camera.GetComponent<ARPoseDriver>().enabled = true;
+        camera.GetComponent<ARCameraManager>().enabled = true;
+        yield return new WaitForSeconds(0.1f);
+        session.enabled = true;
+        
     }
 
     //估计前后端地图的尺度比例，Scale = WorldDist/SceneDist
