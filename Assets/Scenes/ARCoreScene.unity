@@ -366,11 +366,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb0d0dc3d01ab464ca7265ec1969d1af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  scaleField: {fileID: 1317743044}
   arcamera_trans: {fileID: 259715469}
   lockUpdateScale: 1
   usePreComputeScale: 1
   preComputeScale: 1
-  scaleChangeFactor: 0.5295
+  scaleChangeFactor: 0.3765
   minSceneDistanceToUpdateScale: 0.1
   poseUpdatePerFrame: 0
   poseChangeFactor: 0.5
@@ -693,7 +694,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cbf255c393135fb40a5d90823d9c20dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  editorMP4Uri: Q:\projects\AR\Records\2024-04-17-15-37.mp4
+  editorMP4Uri: Q:\projects\AR\Records\sby1.mp4
 --- !u!114 &259715473
 MonoBehaviour:
   m_ObjectHideFlags: 0

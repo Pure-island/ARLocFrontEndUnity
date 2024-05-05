@@ -12,11 +12,12 @@ EditorBuildSettings:
     path: Assets/Scenes/SampleScene1.unity
     guid: daf0a9969a2cbee47bd9f7fefaec7aba
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
+    path: Assets/Scenes/ARCoreScene.unity
     guid: 2ed77d20b43fb194daa1736d08a3ad6a
   m_configObjects:
     AR Foundation RemoteARFoundationRemoteLoaderSettings: {fileID: 11400000, guid: 55b708b30051d9c45ae7035c86245cae, type: 2}
     AR Foundation RemoteARFoundationRemoteSessionRecordsData: {fileID: 11400000, guid: 3a829ffcf11d37943b94d9dc1a73be2a, type: 2}
+    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 924093629cd5ddf4b8ab8a65f6266a70, type: 2}
     UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: 74fa9b5e26338f343ae3d058a2619fc9, type: 2}
     UnityEditor.XR.ARKit.ARKitSettings: {fileID: 11400000, guid: 7deb504194108e8489b405bad6fd799f, type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 11d98158f7e4da440a7276eb5bdc8a3a, type: 2}

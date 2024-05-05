@@ -11,6 +11,7 @@ using UnityEngine.XR.ARSubsystems;
 
 public class ARSceneTransformer : MonoBehaviour
 {
+    public InputField scaleField;
     public Transform arcamera_trans;
     // AR Param
     [SerializeField]
@@ -91,6 +92,11 @@ public class ARSceneTransformer : MonoBehaviour
     {
         Init();
         LoadModels(configPath);
+
+        if(scaleField != null)
+        {
+            scaleField.onValueChanged.AddListener(SetScale);
+        }
     }
 
     private void Update()
@@ -206,17 +212,24 @@ public class ARSceneTransformer : MonoBehaviour
                 if (queryWaitList[imgId % queryWaitListLength].id == imgId)
                 {
                     pose = ARTools.poseChangeChirality(pose);   //后端位姿，右->左
+                    //pose = ARTools.getInversePose(pose);
                     //Matrix4x4 Tcw1 = Matrix4x4.TRS(pose.position, pose.rotation, Vector3.one);
                     Matrix4x4 Tcw1 = ARTools.pose2Matrix(pose,true);  //转为矩阵进行操作
 
                     Pose frontPose = queryWaitList[imgId % queryWaitListLength].pose; //前端位姿
                     //Matrix4x4 Tcw2 = Matrix4x4.TRS(frontPose.position, frontPose.rotation, Vector3.one);
-                    Matrix4x4 Tcw2 = ARTools.pose2Matrix(frontPose, true); ;
+                    Matrix4x4 Tcw2 = ARTools.pose2Matrix(frontPose, true);
+
+                    
+                    Matrix4x4 matInv = transformMatrix.inverse;
+                    Pose frontPoseInversed = ARTools.getInversePose(frontPose, true);
+                    Pose serverFrontPose = transformPose(ref matInv, frontPoseInversed);//前端坐标转到定位坐标
+
                     computeTransMatrix(ref Tcw1, ref Tcw2, predictScale);   // Change
                     transformSceneObject();
 
                     returnMsg += ";";
-                    returnMsg += "frontPose " + ARTools.pose2Str(ref frontPose);
+                    returnMsg += "frontPose " + ARTools.pose2Str(ref frontPoseInversed);
                     returnMsg += ";";
                     returnMsg += "transMatrix " + ARTools.matrix2Str(ref transformMatrix);
                     returnMsg += ";";
@@ -228,11 +241,10 @@ public class ARSceneTransformer : MonoBehaviour
 
 
                     returnMsg += ";";
-                    Pose frontPoseInversed = ARTools.getInversePose(frontPose, true);
-                    returnMsg += "ARCameraPose " + ARTools.pose2Str(ref frontPoseInversed);
+                    
+                    returnMsg += "ARCameraPose " + ARTools.pose2Str(ref serverFrontPose);
                     returnMsg += ";";
                     Pose ServerPose = ARTools.getInversePose(pose, true);
-                    ServerPose = transformPose(ref transformMatrix, ServerPose);
                     returnMsg += "ServerPose " + ARTools.pose2Str(ref ServerPose);
                 }
 
@@ -414,7 +426,6 @@ public class ARSceneTransformer : MonoBehaviour
         {
             updateScale(ref sceneCameraPos, ref worldCameraPos);
         }
-
         transformMatrix = Tw2c * Tscale21 * Tcw1;   //Tw2w1，场景坐标到世界坐标
 
     }
@@ -571,5 +582,11 @@ public class ARSceneTransformer : MonoBehaviour
             VOList[id].SetActive(isset);
         }
         
+    }
+
+    public void SetScale(string scale)
+    {
+        float s = float.Parse(scale);
+        predictScale = s;
     }
 }

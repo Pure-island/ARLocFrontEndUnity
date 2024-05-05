@@ -26,6 +26,32 @@
         "com.unity.modules.imgui": "1.0.0"
       }
     },
+    "com.rokid.xr.core": {
+      "version": "1.23.3",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.xr.management": "4.2.0",
+        "com.unity.xr.legacyinputhelpers": "2.1.10",
+        "com.unity.nuget.newtonsoft-json": "3.0.1"
+      },
+      "url": "https://npm.rokid.com"
+    },
+    "com.rokid.xr.unity": {
+      "version": "2.4.6",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.modules.ui": "1.0.0",
+        "com.unity.modules.imgui": "1.0.0",
+        "com.unity.xr.management": "4.2.0",
+        "com.rokid.xr.core": "1.23.3",
+        "com.unity.xr.legacyinputhelpers": "2.1.10",
+        "com.unity.nuget.newtonsoft-json": "3.0.1",
+        "com.unity.inputsystem": "1.7.0"
+      },
+      "url": "https://npm.rokid.com"
+    },
     "com.siccity.gltfutility": {
       "version": "https://github.com/Siccity/GLTFUtility.git",
       "depth": 0,
@@ -85,6 +111,15 @@
       "depth": 0,
       "source": "registry",
       "dependencies": {},
+      "url": "https://packages.unity.cn"
+    },
+    "com.unity.inputsystem": {
+      "version": "1.7.0",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.modules.uielements": "1.0.0"
+      },
       "url": "https://packages.unity.cn"
     },
     "com.unity.nuget.newtonsoft-json": {
@@ -190,7 +225,7 @@
     },
     "com.unity.xr.legacyinputhelpers": {
       "version": "2.1.10",
-      "depth": 2,
+      "depth": 1,
       "source": "registry",
       "dependencies": {
         "com.unity.modules.vr": "1.0.0",
@@ -207,6 +242,15 @@
         "com.unity.modules.vr": "1.0.0",
         "com.unity.modules.xr": "1.0.0",
         "com.unity.xr.legacyinputhelpers": "2.1.7"
+      },
+      "url": "https://packages.unity.cn"
+    },
+    "com.unity.xr.oculus": {
+      "version": "3.3.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.xr.management": "4.2.0"
       },
       "url": "https://packages.unity.cn"
     },

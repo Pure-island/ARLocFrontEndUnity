@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Face_To_MainCamera : MonoBehaviour
+public class FaceToMainCamera : MonoBehaviour
 {
     Transform facing_camera_transform;
     Vector3 facing_camera_localpos;
