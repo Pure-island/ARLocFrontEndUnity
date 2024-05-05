@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "com.google.ar.core.arfoundation.extensions": "https://github.com/google-ar/arcore-unity-extensions.git",
-    "com.kyrylokuzyk.arfoundationremote": "file:../Assets/Plugins/ARFoundationRemoteInstaller/com.kyrylokuzyk.arfoundationremote.tgz",
     "com.rokid.xr.core": "1.23.3",
     "com.rokid.xr.unity": "2.4.6",
     "com.siccity.gltfutility": "https://github.com/Siccity/GLTFUtility.git",
