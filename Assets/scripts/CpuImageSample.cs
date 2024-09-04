@@ -14,6 +14,8 @@ using UnityEngine.XR.ARSubsystems;
 // Adds XRCameraConfigurationExtensions extension methods to XRCameraConfiguration.
 // This is for the Android platform only.
 using Google.XR.ARCoreExtensions;
+using UnityEngine.Experimental.Rendering;
+using System.Threading.Tasks;
 
 /// <summary>测试获取CPU图像</summary>
 public class CpuImageSample : MonoBehaviour
@@ -21,6 +23,7 @@ public class CpuImageSample : MonoBehaviour
     public ARSceneTransformer arTransformer;
     private Transform recordTranform;
     public Transform arcamera;
+    public ColmapRecorder colmapRecorder;
 
     private int img_idx = 0;
 
@@ -32,10 +35,12 @@ public class CpuImageSample : MonoBehaviour
     private ARSession session;
     private ARCameraBackground mARCameraBackground;
     private string BaseURL = "";
+
     //控件
     public Button btn_justimage;
     public Button btn_IAndP;
     public Button btn_pause;
+    public Button btn_colmap;
     public Text text_result;
     public InputField input_url;
     
@@ -44,6 +49,7 @@ public class CpuImageSample : MonoBehaviour
 
     private bool netRequst = true;
     private bool sendImg = false;
+    private bool recordColmap = false;
 
     private void SetUrl(string baseurl)
     {
@@ -84,14 +90,15 @@ public class CpuImageSample : MonoBehaviour
         btn_justimage.onClick.AddListener(upJustImage);
         btn_IAndP.onClick.AddListener(getPoseOnce);
         btn_pause.onClick.AddListener(ARpause);
+        btn_colmap.onClick.AddListener(TryRecordColmap);
         if (input_url.text != "")
         {
             BaseURL = input_url.text;
         }
         input_url.onEndEdit.AddListener(SetUrl);
 
-        //9.20修改，隐藏连续定位的按钮，将连续定位功能改为自动触发
-        upJustImage();
+        //9.20修改，隐藏连续定位的按钮，将连续定位功能改为自动触发 240828:改为手动触发
+        //upJustImage();
     }
 
     private void ARpause()
@@ -114,6 +121,20 @@ public class CpuImageSample : MonoBehaviour
         //m_CameraManager.enabled = true;
         sendImg = true;
         flag = 1;
+    }
+
+    private void TryRecordColmap()
+    {
+        recordColmap = !recordColmap;
+        colmapRecorder.Recording = recordColmap;
+        if (recordColmap)
+        {
+            text_result.text = "录制colmap文件中";
+        }
+        else
+        {
+            text_result.text = string.Empty;
+        }
     }
 
     private void OnEnable()
@@ -145,16 +166,73 @@ public class CpuImageSample : MonoBehaviour
             if (flag == 2)
                 sendImg = false;
         }
+        if (recordColmap)
+        {
+            RecordColmap(eventArgs);
+        }
     }
 
     [Obsolete]
     private unsafe void updateCameraImage(ARCameraFrameEventArgs eventArgs)
     {
-        if (!m_CameraManager.TryAcquireLatestCpuImage(out XRCpuImage image)) { return; }
+        //正在发送中，直接退出
+        if (!netRequst) return;
+
+        Texture2D rotatedTexture = GetCurrentImg(out XRCpuImage image);
+
+        //texture转bytes存储图片 
+
+        //var bytes = rotatedTexture.EncodeToPNG();
+        var bytes = rotatedTexture.EncodeToJPG(95);                             //###################
+
+        string timestamp1 = image.timestamp.ToString();
+        //string fileName = "image.png";
+        //string filePath_image = Path.Combine(Application.persistentDataPath + "/" + timestamp1, fileName);
+        /*string directoryPath = Path.GetDirectoryName(filePath_image);
+        if (!Directory.Exists(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+        }*/
+        //保存图片
+        //System.IO.File.WriteAllBytes(filePath_image, bytes);
+        //Debug.Log(filePath_image);
+
+        //显示小窗口
+        rawCameraImage.sprite = Sprite.Create(rotatedTexture, new Rect(0, 0, rotatedTexture.width, rotatedTexture.height), new Vector2(0.5f, 0.5f));
+        rawCameraImage.preserveAspect = true;
+
+        // 获取相机的位置和旋转
+        Vector3 position1 = m_CameraManager.transform.position;
+        Quaternion rotation = m_CameraManager.transform.rotation;
+
+
+        imageInfo.text = string.Format(
+               "Image info:\n\twidth: {0}\n\theight: {1}\n\tplaneCount: {2}\n\ttimestamp: {3}\n\tformat: {4}\n\tposition: {5}\n\trotation: {6}",
+               image.width, image.height, image.planeCount, timestamp1, image.format, position1, rotation);
+
+
+
+        string content_pose = position1.x.ToString() + " " + position1.y.ToString() + " " + position1.z.ToString() + " " + rotation.x.ToString() + " " + rotation.y.ToString() + " " + rotation.z.ToString() + " " + rotation.w.ToString();
+        // string filePath_pose = Path.Combine(Application.persistentDataPath + "/" + timestamp1, "pose.txt");
+
+
+        //上传相关信息
+        if (netRequst)
+        {
+
+            netRequst = false;
+            StartCoroutine(UploadJustImage(bytes, timestamp1, recordTranform));
+        }
+        StartCoroutine(DestoryUnusedTexture());//防止内存溢出，清理一下未使用的纹理
+    }
+
+    private unsafe Texture2D GetCurrentImg(out XRCpuImage image)
+    {
+        if (!m_CameraManager.TryAcquireLatestCpuImage(out image)) { return null; }
         //保存位姿 Transform
         recordTranform = arcamera.transform;
 
-        
+
         var format = TextureFormat.RGBA32;
         Texture2D m_CameraTexture = new Texture2D(image.width, image.height, format, false);//在方法最后，清理纹理
         //if (m_CameraTexture == null || m_CameraTexture.width != image.width || m_CameraTexture.height != image.height)
@@ -192,51 +270,7 @@ public class CpuImageSample : MonoBehaviour
             rotatedTexture = RotateTextureAntiClock90(rotatedTexture);
             rotatedTexture = RotateTextureAntiClock90(rotatedTexture);
         }
-
-        //texture转bytes存储图片 
-
-        //var bytes = rotatedTexture.EncodeToPNG();
-        var bytes = rotatedTexture.EncodeToJPG(95);                             //###################
-
-        string timestamp1 = image.timestamp.ToString();
-        //string fileName = "image.png";
-        //string filePath_image = Path.Combine(Application.persistentDataPath + "/" + timestamp1, fileName);
-        /*string directoryPath = Path.GetDirectoryName(filePath_image);
-        if (!Directory.Exists(directoryPath))
-        {
-            Directory.CreateDirectory(directoryPath);
-        }*/
-        //保存图片
-        //System.IO.File.WriteAllBytes(filePath_image, bytes);
-        //Debug.Log(filePath_image);
-
-        //显示小窗口
-        rawCameraImage.sprite = Sprite.Create(rotatedTexture, new Rect(0, 0, rotatedTexture.width, rotatedTexture.height), new Vector2(0.5f, 0.5f));
-        rawCameraImage.preserveAspect = true;
-
-        // 获取相机的位置和旋转
-        Vector3 position1 = m_CameraManager.transform.position;
-        Quaternion rotation = m_CameraManager.transform.rotation;
-
-
-        imageInfo.text = string.Format(
-               "Image info:\n\twidth: {0}\n\theight: {1}\n\tplaneCount: {2}\n\ttimestamp: {3}\n\tformat: {4}\n\tposition: {5}\n\trotation: {6}",
-               image.width, image.height, image.planeCount, timestamp1, image.format, position1, rotation);
-
-
-
-        string content_pose = position1.x.ToString() + " " + position1.y.ToString() + " " + position1.z.ToString() + " " + rotation.x.ToString() + " " + rotation.y.ToString() + " " + rotation.z.ToString() + " " + rotation.w.ToString();
-       // string filePath_pose = Path.Combine(Application.persistentDataPath + "/" + timestamp1, "pose.txt");
-
-
-        //上传相关信息
-        if (netRequst)
-        {
-
-            netRequst = false;
-            StartCoroutine(UploadJustImage(bytes, timestamp1,recordTranform));
-        }
-        StartCoroutine(DestoryUnusedTexture());//防止内存溢出，清理一下未使用的纹理
+        return rotatedTexture;
     }
 
     private Texture2D RotateTextureAntiClock90(Texture2D m_CameraTexture)
@@ -451,12 +485,26 @@ public class CpuImageSample : MonoBehaviour
 
     }
 
+    private void RecordColmap(ARCameraFrameEventArgs eventArgs)
+    {
+        if(colmapRecorder.Recording && colmapRecorder.CanRecord)
+        {
+            Texture2D rotatedTexture = GetCurrentImg(out XRCpuImage image);
+            colmapRecorder.RecordToColmap(rotatedTexture, eventArgs);        
+            
+            //显示小窗口
+            rawCameraImage.sprite = Sprite.Create(rotatedTexture, new Rect(0, 0, rotatedTexture.width, rotatedTexture.height), new Vector2(0.5f, 0.5f));
+            rawCameraImage.preserveAspect = true;
+
+            StartCoroutine(DestoryUnusedTexture());//防止内存溢出，清理一下未使用的纹理
+        }
+        //writeTask.Wait();
+    }
     IEnumerator DestoryUnusedTexture()
     {
         yield return new WaitForSeconds(0.1f);
         Resources.UnloadUnusedAssets();
         System.GC.Collect();
     }
-
 
 }
