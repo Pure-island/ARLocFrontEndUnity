@@ -98,6 +98,7 @@ public class ColmapRecorder : MonoBehaviour
         Debug.Log("saving img ");
         //Pose p = new Pose(cameraManager.transform.position - anchor.transform.position, cameraManager.transform.rotation * Quaternion.Inverse(anchor.transform.rotation));
         Pose p = new Pose(cameraManager.transform.position, cameraManager.transform.rotation);
+        p = ARTools.poseChangeChirality(p);
         p = ARTools.getInversePose(p);
         File.AppendAllText(ImageTxtPath, $"{Environment.NewLine}{imgID} {p.rotation.w} {p.rotation.x} {p.rotation.y} {p.rotation.z} {p.position.x} {p.position.y} {p.position.z} 1 {imgID}.png");
         File.AppendAllText(ImageTxtPath, $"{Environment.NewLine}0 0 -1");
